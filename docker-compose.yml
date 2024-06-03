@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  celery_worker_sheet:
+    build:
+      context: .
+    command: celery -A manage worker --loglevel=INFO
+    depends_on:
+      - redis_sheet
+
+  celery_beat_sheet:
+    build:
+      context: .
+    command: celery -A manage beat --loglevel=INFO
+    depends_on:
+      - redis_sheet
+
+  redis_sheet:
+    container_name: redis_sheet
+    image: redis:latest
