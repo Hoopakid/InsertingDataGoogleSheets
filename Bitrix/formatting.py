@@ -53,6 +53,3 @@ def format_bitrix_data():
             'dialing': dialing,
         })
     return ctx
-
-
-format_bitrix_data()
