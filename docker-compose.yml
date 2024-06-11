@@ -1,12 +1,6 @@
 version: '3'
 
 services:
-  python_auto_bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python user_bot.py
-
   celery_worker_sheet:
     build:
       context: .
