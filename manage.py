@@ -1,5 +1,6 @@
 import os
 import requests
+import logging
 from celery import Celery
 from celery.schedules import crontab
 
@@ -7,6 +8,7 @@ from setup import GoogleSheetsManager, CallData
 from dotenv import load_dotenv
 
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
 app = Celery(
     'manage',
@@ -15,37 +17,57 @@ app = Celery(
 )
 
 app.conf.beat_schedule = {
-    'add_every_night': {
-        'task': 'manage.add_every_night',
+    'add_margarit': {
+        'task': 'manage.add_margarit',
         'schedule': crontab(hour=20, minute=0)
+    },
+    'add_bulut': {
+        'task': 'manage.add_bulut',
+        'schedule': crontab(hour=22, minute=0)
     }
 }
 
 SHEET_URL = os.environ.get('SHEET_URL')
 API_URL = os.environ.get('API_URL')
 
-google_obj = GoogleSheetsManager(
+margarit_google_obj = GoogleSheetsManager(
     credentials_file='credentials.json',
-    sheet_url=SHEET_URL
+    sheet_url=SHEET_URL,
+    worksheet_name='Margaritto Yangi akab'
+)
+
+bulut_google_obj = GoogleSheetsManager(
+    credentials_file='credentials.json',
+    sheet_url=SHEET_URL,
+    worksheet_name='Bulut Yangi AKB'
 )
 
 
 @app.task()
-def add_every_night():
-    url = f'{API_URL}/data-google-sheet'
-    r = requests.get(url)
-    if r.json()['detail'] != 'There are some problems with Bitrix, please try again later!':
-        bitrix_datas = r.json()['data']
-        for data in bitrix_datas:
-            call_data = CallData(
-                date_str=data['date'],
-                employee=data['seller'],
-                phone_number=data['client_phone_number'],
-                client=data['client'],
-                call_status=data['direction'],
-                answered=data['answered'],
-                call_duration=data['duration'],
-                dialing=data['dialing'],
-                source='Номер не указан'
-            )
-            google_obj.append_row(call_data.format_data(len(google_obj.get_sheet_data()) + 1))
+def add_margarit():
+    bulut_margarit_akb_url = f'{API_URL}/get-akb-data'
+    r = requests.get(bulut_margarit_akb_url)
+    logging.info('Data fetched')
+    if r.json()['status'] == 200:
+        margarit_data = r.json()['data']['Margarit']
+        for data in margarit_data:
+            temp = []
+            for key, val in data.items():
+                temp.append(val)
+            margarit_google_obj.append_row(temp)
+        logging.info('Margarit data added')
+
+
+@app.task()
+def add_bulut():
+    bulut_margarit_akb_url = f'{API_URL}/get-akb-data'
+    r = requests.get(bulut_margarit_akb_url)
+    logging.info('Data fetched')
+    if r.json()['status'] == 200:
+        bulut_data = r.json()['data']['Bulut']
+        for data in bulut_data:
+            temp = []
+            for key, val in data.items():
+                temp.append(val)
+            bulut_google_obj.append_row(temp)
+        logging.info('Bulut data added')

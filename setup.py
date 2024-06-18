@@ -4,13 +4,13 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 class GoogleSheetsManager:
-    def __init__(self, credentials_file, sheet_url):
+    def __init__(self, credentials_file, sheet_url, worksheet_name):
         self.scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         self.credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials_file, self.scope)
         self.gc = gspread.authorize(self.credentials)
         self.sheet_url = sheet_url
         self.sheet = self.gc.open_by_url(self.sheet_url)
-        self.worksheet = self.sheet.get_worksheet(0)
+        self.worksheet = self.sheet.worksheet(worksheet_name)
 
     def get_sheet_data(self):
         return self.worksheet.get_all_values()
