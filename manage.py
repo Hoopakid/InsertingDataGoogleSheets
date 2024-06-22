@@ -4,7 +4,7 @@ import logging
 from celery import Celery
 from celery.schedules import crontab
 
-from setup import GoogleSheetsManager
+from setup import GoogleSheetsManager, CallData
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -28,11 +28,16 @@ app.conf.beat_schedule = {
     'add_bulut1': {
         'task': 'manage.add_bulut1',
         'schedule': crontab(hour=18, minute=0)
+    },
+    'add_salesdoctor': {
+        'task': 'manage.add_salesdoctor',
+        'schedule': crontab(hour=18, minute=50)
     }
 }
 
 SHEET_URL = os.environ.get('SHEET_URL')
 API_URL = os.environ.get('API_URL')
+SALESDOCTOR_SHEET_URL = os.environ.get('SALESDOCTOR_SHEET_URL')
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 USER_CHAT_ID = os.environ.get('USER_CHAT_ID')
 
@@ -102,4 +107,36 @@ def add_bulut1():
     url = f'https://api.telegram.org/bot{BOT_TOKEN}'
     requests.post(url + '/sendMessage',
                   data={'chat_id': USER_CHAT_ID, 'text': 'Bulut/Margaritto data added to Google Sheets'})
+    return True
+
+
+@app.task()
+def add_salesdoctor():
+    salesdoctor_url = f'{API_URL}/get-sheet-data'
+    response = requests.get(salesdoctor_url)
+    logging.info('Data fetched')
+    sheet_obj = GoogleSheetsManager(
+        credentials_file='credentials.json',
+        sheet_url=SALESDOCTOR_SHEET_URL,
+        worksheet_name='Baza'
+    )
+    if response.status_code == 200:
+        datas = response.json()
+        for data in datas['data']:
+            obj_call = CallData(
+                date_str=data['date'],
+                employee=data['seller'],
+                phone_number=data['client_phone_number'],
+                client=data['client'],
+                call_status=data['direction'],
+                answered=data['answered'],
+                call_duration=data['duration'],
+                dialing=data['dialing'],
+                source='Номер не указан'
+            )
+            sheet_obj.append_row(obj_call.format_data(len(sheet_obj.get_sheet_data()) + 1))
+        logging.info("Google sheet objects added")
+    url = f'https://api.telegram.org/bot{BOT_TOKEN}'
+    requests.post(url + '/sendMessage',
+                  data={'chat_id': USER_CHAT_ID, 'text': 'SalesDoctor data added to Google Sheets'})
     return True
