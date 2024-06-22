@@ -19,15 +19,15 @@ app = Celery(
 app.conf.beat_schedule = {
     'add_margarit': {
         'task': 'manage.add_margarit',
-        'schedule': crontab(hour=20, minute=0)
+        'schedule': crontab(hour=8, minute=0)
     },
     'add_bulut': {
         'task': 'manage.add_bulut',
-        'schedule': crontab(hour=22, minute=0)
+        'schedule': crontab(hour=9, minute=0)
     },
     'add_bulut1': {
         'task': 'manage.add_bulut1',
-        'schedule': crontab(hour=18, minute=0)
+        'schedule': crontab(hour=10, minute=0)
     },
     'add_salesdoctor': {
         'task': 'manage.add_salesdoctor',
