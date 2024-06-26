@@ -19,19 +19,19 @@ app = Celery(
 app.conf.beat_schedule = {
     'add_margarit': {
         'task': 'manage.add_margarit',
-        'schedule': crontab(hour=8, minute=0)
+        'schedule': crontab(hour=2, minute=0)
     },
     'add_bulut': {
         'task': 'manage.add_bulut',
-        'schedule': crontab(hour=9, minute=0)
+        'schedule': crontab(hour=1, minute=0)
     },
     'add_bulut1': {
         'task': 'manage.add_bulut1',
-        'schedule': crontab(hour=10, minute=0)
+        'schedule': crontab(hour=3, minute=0)
     },
     'add_salesdoctor': {
         'task': 'manage.add_salesdoctor',
-        'schedule': crontab(hour=18, minute=50)
+        'schedule': crontab(hour=20, minute=0)
     }
 }
 
@@ -64,10 +64,11 @@ def add_margarit():
                 temp.append(val)
             margarit_google_obj.append_row(temp)
         logging.info('Margarit data added')
-    url = f'https://api.telegram.org/bot{BOT_TOKEN}'
-    requests.post(url + '/sendMessage',
-                  data={'chat_id': USER_CHAT_ID, 'text': 'Margaritto data added to Google Sheets'})
-    return True
+        url = f'https://api.telegram.org/bot{BOT_TOKEN}'
+        requests.post(url + '/sendMessage',
+                      data={'chat_id': USER_CHAT_ID, 'text': 'Margaritto data added to Google Sheets'})
+        return True
+    return False
 
 
 @app.task()
@@ -84,10 +85,11 @@ def add_bulut():
                 temp.append(val)
             bulut_google_obj.append_row(temp)
         logging.info('Bulut data added')
-    url = f'https://api.telegram.org/bot{BOT_TOKEN}'
-    requests.post(url + '/sendMessage',
-                  data={'chat_id': USER_CHAT_ID, 'text': 'Bulut data added to Google Sheets'})
-    return True
+        url = f'https://api.telegram.org/bot{BOT_TOKEN}'
+        requests.post(url + '/sendMessage',
+                      data={'chat_id': USER_CHAT_ID, 'text': 'Bulut data added to Google Sheets'})
+        return True
+    return False
 
 
 @app.task()
@@ -104,15 +106,16 @@ def add_bulut1():
                 temp.append(val)
             google_obj.append_row(temp)
         logging.info('Bulut data added')
-    url = f'https://api.telegram.org/bot{BOT_TOKEN}'
-    requests.post(url + '/sendMessage',
-                  data={'chat_id': USER_CHAT_ID, 'text': 'Bulut/Margaritto data added to Google Sheets'})
-    return True
+        url = f'https://api.telegram.org/bot{BOT_TOKEN}'
+        requests.post(url + '/sendMessage',
+                      data={'chat_id': USER_CHAT_ID, 'text': 'Bulut/Margaritto data added to Google Sheets'})
+        return True
+    return False
 
 
 @app.task()
 def add_salesdoctor():
-    salesdoctor_url = f'{API_URL}/get-sheet-data'
+    salesdoctor_url = f'{API_URL}/data-google-sheet'
     response = requests.get(salesdoctor_url)
     logging.info('Data fetched')
     sheet_obj = GoogleSheetsManager(
@@ -136,7 +139,8 @@ def add_salesdoctor():
             )
             sheet_obj.append_row(obj_call.format_data(len(sheet_obj.get_sheet_data()) + 1))
         logging.info("Google sheet objects added")
-    url = f'https://api.telegram.org/bot{BOT_TOKEN}'
-    requests.post(url + '/sendMessage',
-                  data={'chat_id': USER_CHAT_ID, 'text': 'SalesDoctor data added to Google Sheets'})
-    return True
+        url = f'https://api.telegram.org/bot{BOT_TOKEN}'
+        requests.post(url + '/sendMessage',
+                      data={'chat_id': USER_CHAT_ID, 'text': 'SalesDoctor data added to Google Sheets'})
+        return True
+    return False
